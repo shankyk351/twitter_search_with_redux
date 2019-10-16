@@ -1,6 +1,9 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 
+## Click here for demo :  
+<a href="https://hgupta91.github.io/twitter_search/">https://hgupta91.github.io/twitter_search/</a>
+
 ## Steps to run project
 
     1. Download or clone project.
