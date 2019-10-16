@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.css';
+import './loader.css';
 import axios from 'axios';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -15,7 +16,8 @@ class App extends React.Component{
       searchText: '',
       time: 30,
       setTime: null,
-      havePosts: false
+      havePosts: false,
+      showLoader: false
     }
   }
 
@@ -45,17 +47,30 @@ class App extends React.Component{
 
   // get post data
   getPostData(val){
+    this.setState({
+      showLoader: true,
+      havePosts: true
+    })
     axios.get('https://aravindtwitter.herokuapp.com/twittersearch', {
       params: {
         key: val
       }
     }).then((res)=>{
       console.log('res',res);
-      this.setState({
-        searchData: [...res.data.statuses],
-        havePosts: true
-      });
-      this.timer();
+      if(res.data.statuses.length){
+        this.setState({
+          searchData: [...res.data.statuses],
+          havePosts: true,
+          showLoader: false
+        });
+        this.timer();
+      }else{
+        this.setState({
+          searchData: [],
+          havePosts: false,
+          showLoader: false
+        })
+      }
     }).catch((err)=>{
       console.log(err.message);
     })
@@ -82,7 +97,7 @@ class App extends React.Component{
   }
 
   render(){
-    const {searchData, searchText, time, havePosts} = this.state;
+    const {searchData, searchText, time, havePosts, showLoader} = this.state;
     const listItem = searchData.map((item, index)=>{
       return (
         <div className="col-lg-12 col-md-6" key={index}>
@@ -126,6 +141,7 @@ class App extends React.Component{
           <div className="row">
             {listItem}
           </div>
+          {showLoader&&<div className="loader"></div>}
           {!havePosts && <h3 style={{textAlign:'center'}}>No Posts available</h3>}
           {/* /list */}
 
