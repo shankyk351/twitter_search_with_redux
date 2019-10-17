@@ -5,6 +5,11 @@ import axios from 'axios';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+// components
+import Search from './components/search/search';
+import Listing from './components/listing/listing';
+import SearchHeader from './components/searchHeader/searchHeader';
+
 
 
 class App extends React.Component{
@@ -17,7 +22,8 @@ class App extends React.Component{
       time: 30,
       setTime: null,
       havePosts: false,
-      showLoader: false
+      showLoader: false,
+      InternetIssue: false
     }
   }
 
@@ -61,6 +67,7 @@ class App extends React.Component{
         this.setState({
           searchData: [...res.data.statuses],
           havePosts: true,
+          InternetIssue: false,
           showLoader: false
         });
         this.timer();
@@ -73,6 +80,13 @@ class App extends React.Component{
       }
     }).catch((err)=>{
       console.log(err.message);
+      if(err.message === "Network Error"){
+        this.setState({
+          InternetIssue: true,
+          showLoader: false,
+          havePosts: false
+        })
+      }
     })
   }
 
@@ -97,60 +111,32 @@ class App extends React.Component{
   }
 
   render(){
-    const {searchData, searchText, time, havePosts, showLoader} = this.state;
-    const listItem = searchData.map((item, index)=>{
-      return (
-        <div className="col-lg-12 col-md-6" key={index}>
-          <div className="media p-3 card-item">
-            <img src={item.user.profile_image_url} alt="" className="mr-3 rounded-circle" style={{"width":"60px"}} />
-            <div className="media-body">
-              <h4 className="post-title">
-                {item.user.name}
-                <span className="user-id">@{item.user.screen_name} </span>
-                <small><i>{item.created_at}</i></small>
-              </h4>
-              <p>{item.text}</p>
-            </div>
-          </div>
-        </div>
-      )
-    })
+    
+    const {searchData, time, havePosts, showLoader, InternetIssue} = this.state;
+    
     return (
       <div className="App">
         <div className="container">
-          <div className="refresh-time">
-            <p>Search @ Twitter</p>
-            {havePosts && <p>Auto refresh in {time} seconds</p>}
-          </div>
-          {/* search */}
-          <div className="row justify-content-center">
-            <div className="col-md-9">
-              <form onSubmit={(event)=>this.submitSearch(event)}>
-                <div className="input-group mb-3">
-                  <input type="text" className="form-control" onChange={(e)=>this.searchInputValue(e)} placeholder="Search" />
-                  <div className="input-group-append">
-                    <button type="submit" className="input-group-text search-btn">Search</button>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </div>
-          {/* /search */}
+          <SearchHeader havePosts={havePosts} time={time} />
+          <Search searchHandler={(e)=>this.submitSearch(e)} handleInputValue={(e)=>this.searchInputValue(e)}/>
+          
+          {/* listing */}
+          {searchData.map((item, index)=>{
+            return <Listing data={item} key={index} />
+          })}
+          {/* /listing */}
 
-          {/* list */}
-          <div className="row">
-            {listItem}
-          </div>
+          {/* loader and error messages */}
           {showLoader&&<div className="loader"></div>}
-          {!havePosts && <h3 style={{textAlign:'center'}}>No Posts available</h3>}
-          {/* /list */}
+          {(!havePosts && !InternetIssue) && <h3 style={{textAlign:'center'}}>No Posts available</h3>}
+          {InternetIssue && <h4 style={{textAlign:'center'}}>Unable to fetch data due to No/Slow internet connection, Please Try Again!!!</h4>}
+          {/* /loader and error messages */}
 
         </div> 
       </div>
     );
   }
 }
-
 
 
 export default App;
