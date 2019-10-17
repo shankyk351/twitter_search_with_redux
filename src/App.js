@@ -5,6 +5,9 @@ import axios from 'axios';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+// service
+import API from './services/api';
+
 // components
 import Search from './components/search/search';
 import Listing from './components/listing/listing';
@@ -57,7 +60,7 @@ class App extends React.Component{
       showLoader: true,
       havePosts: true
     })
-    axios.get('https://aravindtwitter.herokuapp.com/twittersearch', {
+    API.get('/twittersearch', {
       params: {
         key: val
       }
