@@ -12,7 +12,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
     5. If not open in browser itself then open browser tab and add url "localhost:3000" and run.
 
 ## Click on below link for demo :  
-<a href="https://shankyk351.github.io/twitter_search/">https://shankyk351.github.io/twitter_search//</a>
+<a href="https://hgupta91.github.io/twitter_search/">https://hgupta91.github.io/twitter_search//</a>
 
 ## Available Scripts
 

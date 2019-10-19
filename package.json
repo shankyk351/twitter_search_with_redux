@@ -2,7 +2,7 @@
   "name": "twitter-search",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://shankyk351.github.io/twitter_search/",
+  "homepage": "https://hgupta91.github.io/twitter_search/",
   "dependencies": {
     "axios": "^0.19.0",
     "bootstrap": "^4.3.1",
