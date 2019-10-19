@@ -1,7 +1,6 @@
 import React from 'react';
 import './App.css';
 import './loader.css';
-import axios from 'axios';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
