@@ -3,14 +3,24 @@ import './App.css';
 import './loader.css';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
-
-// service
-import API from './services/api';
+import twitter from './twitter.svg';
 
 // components
 import Search from './components/search/search';
 import Listing from './components/listing/listing';
 import SearchHeader from './components/searchHeader/searchHeader';
+
+// actions
+import { 
+         showLoaderAction, 
+         havePostsAction, 
+         searchTextAction, 
+         searchDataAction,
+         internetIssueAction,
+         httpRequestAction
+        } from './actions/index';
+
+import { connect } from 'react-redux';
 
 
 
@@ -19,13 +29,20 @@ class App extends React.Component{
   constructor(props){
     super(props);
     this.state = {
-      searchData : [],
-      searchText: '',
       time: 30,
       setTime: null,
-      havePosts: false,
-      showLoader: false,
-      InternetIssue: false
+      searchText: '',
+      isBlank: false
+    }
+  }
+
+  componentDidUpdate(prevProps){
+    if(prevProps.httpRequestReducer !== this.props.httpRequestReducer){
+      {this.props.httpRequestReducer.data &&
+        this.props.httpRequestReducer.data.statuses &&
+        this.props.httpRequestReducer.data.statuses.length &&
+        this.timer()
+      };
     }
   }
 
@@ -34,13 +51,16 @@ class App extends React.Component{
     clearInterval(this.state.setTime);
     if(this.state.searchText){
       this.setState({
-        time: 30
+        time: 30,
+        isBlank: false
       })
       this.getPostData(this.state.searchText);
     }else{
+      this.props.havePostsAction(false);
+      this.getPostData('');
       this.setState({
-        searchData: [],
-        havePosts: false
+        isBlank: true,
+        time: 30
       })
     }
     event.preventDefault();
@@ -55,41 +75,8 @@ class App extends React.Component{
 
   // get post data
   getPostData(val){
-    this.setState({
-      showLoader: true,
-      havePosts: true
-    })
-    API.get('/twittersearch', {
-      params: {
-        key: val
-      }
-    }).then((res)=>{
-      console.log('res',res);
-      if(res.data.statuses.length){
-        this.setState({
-          searchData: [...res.data.statuses],
-          havePosts: true,
-          InternetIssue: false,
-          showLoader: false
-        });
-        this.timer();
-      }else{
-        this.setState({
-          searchData: [],
-          havePosts: false,
-          showLoader: false
-        })
-      }
-    }).catch((err)=>{
-      console.log(err.message);
-      if(err.message === "Network Error"){
-        this.setState({
-          InternetIssue: true,
-          showLoader: false,
-          havePosts: false
-        })
-      }
-    })
+      this.props.showLoaderAction(true);
+      this.props.httpRequestAction('twittersearch', val);
   }
 
   // execute reset timer
@@ -113,26 +100,82 @@ class App extends React.Component{
   }
 
   render(){
-    
-    const {searchData, time, havePosts, showLoader, InternetIssue} = this.state;
-    
+    const {time, isBlank} = this.state;
+    const { showLoaderReducer, havePostsReducer, httpRequestReducer, internetIssueReducer } = this.props;
+    // console.log('httpRequestReducer.data', httpRequestReducer);
     return (
       <div className="App">
         <div className="container">
-          <SearchHeader havePosts={havePosts} time={time} />
+          {/* <img src={twitter} className="text-center" style={{'height': '50px', 'margin': '20px auto', 'display': 'block'}} alt=""/> */}
+          <SearchHeader havePosts={havePostsReducer} time={time} />
           <Search searchHandler={(e)=>this.submitSearch(e)} handleInputValue={(e)=>this.searchInputValue(e)}/>
+          {isBlank&&<p className="text-danger text-center">Please enter value to search</p>}
           
           {/* listing */}
-          {searchData.map((item, index)=>{
-            return <Listing data={item} key={index} />
-          })}
+          {httpRequestReducer.data && 
+            httpRequestReducer.data.statuses &&
+            httpRequestReducer.data.statuses.length && 
+            httpRequestReducer.data.statuses.map((item, index)=>{
+              return <Listing data={item} key={index} />
+            })
+          }
+          
           {/* /listing */}
 
           {/* loader and error messages */}
-          {showLoader&&<div className="loader"></div>}
-          {(!havePosts && !InternetIssue) && <h3 style={{textAlign:'center'}}>No Posts available</h3>}
-          {InternetIssue && <h4 style={{textAlign:'center'}}>Unable to fetch data due to No/Slow internet connection, Please Try Again!!!</h4>}
+          {showLoaderReducer &&
+            <div className="loader-container">
+              <div className="loader"></div>
+            </div>
+          }
+          <div className="row justify-content-center">
+            <div className="col-md-9">
+
+              {httpRequestReducer.data && 
+                httpRequestReducer.data.statuses &&
+                !httpRequestReducer.data.statuses.length && 
+                <div className="error-wrapper">
+                    <img src={twitter} height="100" style={{'margin':'30px auto', 'display': 'block'}} alt="" />
+                    <h3 style={{textAlign:'center'}}>No Result Found</h3>
+                </div>
+              }
+              
+              {httpRequestReducer&&
+                httpRequestReducer.data&&
+                httpRequestReducer.data.errors &&
+                <div className="error-wrapper">
+                  <img src={twitter} height="100" style={{'margin':'30px auto', 'display': 'block'}} alt="" />
+                   <h3 className="text-center">{httpRequestReducer.data.errors[0].message}</h3>                
+                </div>
+              }
+
+              {!isBlank && 
+                typeof httpRequestReducer == 'string' &&
+                <div className="error-wrapper">
+                  <img src={twitter} height="100" style={{'margin':'30px auto', 'display': 'block'}} alt="" />
+                  <h3 className="text-center">{httpRequestReducer}</h3>
+                </div>
+              }
+
+              {!isBlank && 
+                (!havePostsReducer && !internetIssueReducer) &&
+                <div className="error-wrapper">
+                  <img src={twitter} height="100" style={{'margin':'30px auto', 'display': 'block'}} alt="" />
+                  <h3 style={{textAlign:'center'}}>No Posts available</h3>
+                </div>
+              }
+
+              {!isBlank && 
+                internetIssueReducer &&
+                <div className="error-wrapper">
+                  <img src={twitter} height="100" style={{'margin':'30px auto', 'display': 'block'}} alt="" />
+                  <h4 style={{textAlign:'center'}}>Unable to fetch data due to No/Slow internet connection, Please Try Again!!!</h4>
+                </div>
+              }              
+            </div>
+          </div>
           {/* /loader and error messages */}
+          
 
         </div> 
       </div>
@@ -140,5 +183,13 @@ class App extends React.Component{
   }
 }
 
+const mapDispatchToProps = {
+  showLoaderAction, havePostsAction, searchTextAction, 
+  searchDataAction, internetIssueAction, httpRequestAction
+};
 
-export default App;
+const mapStateToProps = (state)=>{
+  return state;
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);
